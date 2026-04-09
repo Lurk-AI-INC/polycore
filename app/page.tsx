@@ -150,7 +150,7 @@ export default function HomePage() {
       <div className="page-frame">
         <header className="hero">
           <p className="eyebrow">Binary pricing utility</p>
-          <h1>PolyCalc</h1>
+          <h1>PolyCalc (v0.1)</h1>
           <p className="hero-copy">Price. Edge. EV. Kelly.</p>
         </header>
 
