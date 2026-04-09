@@ -33,6 +33,8 @@ body {
 button,
 input {
   font: inherit;
+  height: max-content;
+  background: none;
 }
 
 .page-shell {
@@ -47,6 +49,8 @@ input {
 
 .hero {
   margin-bottom: 24px;
+  justify-content: space-between;
+  display: flex;
 }
 
 .eyebrow {
@@ -54,7 +58,7 @@ input {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-size: 0.75rem;
+  font-size: 0.60rem;
 }
 
 .hero h1,
@@ -65,7 +69,7 @@ input {
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 5vw, 3.65rem);
+  font-size: clamp(1rem, 2vw, 2rem);
   line-height: 0.96;
   margin-bottom: 12px;
 }
@@ -96,6 +100,16 @@ input {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+.header-button {
+  border: 1px solid transparent;
+  background: #171717;
+  color: var(--text);
+  padding: 0%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  text-decoration: underline;
 }
 
 .secondary-button,

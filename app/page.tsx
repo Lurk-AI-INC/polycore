@@ -11,6 +11,7 @@ import {
   type Inputs,
   type SideResult,
 } from '@/lib/calculator';
+import {redirect} from "next/navigation";
 
 const DEFAULT_INPUTS: Inputs = {
   yesPrice: '54',
@@ -150,9 +151,15 @@ export default function HomePage() {
     <main className="page-shell">
       <div className="page-frame">
         <header className="hero">
-          <p className="eyebrow">Binary pricing utility</p>
-          <h1 className="title">PolyCalc (v0.1)</h1>
-          By <Link href="https://lurk-ai.com">Lurk</Link>.
+          <div>
+            <p className="eyebrow">Binary pricing utility</p>
+            <h1>PolyCalc (v0.1)</h1>
+            By <Link href="https://lurk-ai.com">Lurk</Link>
+          </div>
+
+          <button className="header-button" type="button" onClick={() => redirect('')}>
+            Contribute
+          </button>
         </header>
 
         <section className="panel input-panel">
