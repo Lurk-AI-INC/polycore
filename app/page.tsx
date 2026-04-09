@@ -411,9 +411,7 @@ export default function HomePage() {
       <div className="page-frame">
         <div className="topbar panel-surface">
           <div className="brand-lockup">
-            <div className="brand-mark" aria-hidden="true">
-              L
-            </div>
+
             <div>
               <p className="eyebrow">Open-source utility by Lurk</p>
               <div className="brand-line">
@@ -435,9 +433,9 @@ export default function HomePage() {
         <header className="hero panel-surface">
           <div className="hero-copy-wrap">
             <p className="eyebrow">Advanced binary contract math</p>
-            <h1>Price cleanly. Size rationally. Pass when the edge is fake.</h1>
+            <h1>Price cleanly. Size rationally. Pass on fake edge.</h1>
             <p className="hero-copy">
-              Premium-feeling decision support for YES, NO, target entry, reverse pricing, slippage, and sizing — without turning the screen into clown software.
+              Support for YES, NO, target entry, reverse pricing, slippage, and sizing.
             </p>
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={copyShareLink}>
