@@ -93,6 +93,15 @@ input {
   margin-bottom: 20px;
 }
 
+.lurk-cta {
+  color: var(--muted);
+  font-size: 1rem;
+  border : 1px solid transparent;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
 .panel-header,
 .result-card-header,
 .toolbar {

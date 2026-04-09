@@ -154,10 +154,13 @@ export default function HomePage() {
           <div>
             <p className="eyebrow">Binary pricing utility</p>
             <h1>PolyCalc (v0.1)</h1>
-            By <Link href="https://lurk-ai.com">Lurk</Link>
+            by
+            <button className="lurk-cta" type="button" onClick={() => redirect('https://lurk-ai.com')}>
+            Lurk
+          </button>
           </div>
 
-          <button className="header-button" type="button" onClick={() => redirect('')}>
+          <button className="header-button" type="button" onClick={() => redirect('https://github.com/Lurk-AI-INC/polycalc')}>
             Contribute
           </button>
         </header>
