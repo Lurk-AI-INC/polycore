@@ -44,7 +44,7 @@ export default function HomePage() {
           <div className="hero-copy-wrap">
             <p className="eyebrow">Overview</p>
             <h1>Free market tools.</h1>
-            <p className="hero-copy">PolyCore merges advanced math, locally saved watchlists, a live monitor, plus a CLI if you're into that.</p>
+            <p className="hero-copy">PolyCore merges advanced math, locally saved watchlists, a live monitor, and a CLI.</p>
             <div className="hero-actions">
               <Link className="primary-button" href="/calculator">Open calculator</Link>
               <Link className="secondary-button" href="/watchlist">Open watchlist</Link>
