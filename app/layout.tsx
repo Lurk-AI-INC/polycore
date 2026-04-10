@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'PolyCore',
-  description: 'Open source market toolkit by Lurk.',
+  description: 'Open-source binary market toolkit by Lurk.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
