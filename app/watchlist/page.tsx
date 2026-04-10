@@ -149,7 +149,7 @@ export default function WatchlistPage() {
           <div className="brand-lockup">
             <div className="brand-mark">P</div>
             <div>
-              <p className="eyebrow">Open-source binary market toolkit by Lurk</p>
+              <p className="eyebrow">Open source market toolkit by Lurk</p>
               <div className="brand-line">
                 <strong>PolyCore / Watchlist</strong>
                 <span>Track the markets that matter and hand them to the calculator.</span>
