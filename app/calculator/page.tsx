@@ -413,7 +413,7 @@ export default function HomePage() {
           <div className="brand-lockup">
 
             <div>
-              <p className="eyebrow">Open-source binary market toolkit by Lurk</p>
+              <p className="eyebrow">Open-source market toolkit by Lurk</p>
               <div className="brand-line">
                 <strong>PolyCore / Calculator</strong>
                 <span>Analyze a live binary contract</span>
