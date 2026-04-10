@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 function Shell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
-  const nav = [{ href: '/', label: 'Overview' }, { href: '/calculator', label: 'Calculator' }, { href: '/watchlist', label: 'Watchlist' }, { href: '/monitor', label: 'Monitor' }];
+  const nav = [{ href: '/', label: 'Overview' }, { href: '/calculator', label: 'Calculator' }, { href: '/watchlist', label: 'Watchlist' }, { href: '/monitor', label: 'Monitor' }, { href: '/rules', label: 'Rules' }];
   return (
     <div className="page-frame">
       <div className="topbar panel-surface">
@@ -19,7 +19,7 @@ function Shell({ title, subtitle, children }: { title: string; subtitle: string;
       {children}
       <footer className="footer panel-surface">
         <div className="footer-main">
-          <div><p className="eyebrow">PolyCore</p><h2>Open-source market toolkit by Lurk.</h2><p className="section-copy footer-copy">Calculator, watchlist, monitor, and CLI, all in one.</p></div>
+          <div><p className="eyebrow">PolyCore</p><h2>Open-source market toolkit by Lurk.</h2><p className="section-copy footer-copy">Calculator, watchlist, monitor, rules, and CLI, all in one.</p></div>
           <div className="footer-links">
             {nav.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}
           </div>
@@ -32,14 +32,14 @@ function Shell({ title, subtitle, children }: { title: string; subtitle: string;
 const modules = [
   { href: '/calculator', eyebrow: 'Analyze', title: 'Calculator', copy: 'Quote-aware YES / NO pricing with target entry, reverse pricing, fee presets, slippage, and sizing.' },
   { href: '/watchlist', eyebrow: 'Track', title: 'Watchlist', copy: 'Saved watchlists, live Kalshi public data, filter/sort, and one-click launch into the calculator.' },
-  { href: '/monitor', eyebrow: 'Operate', title: 'Monitor', copy: 'A dlive board with selection detail, pulse metrics, and event logs.' },
-  { href: '/rules', eyebrow: 'Regulate', title: 'Rules', copy: 'A denser live board with selection detail, pulse metrics, event logs, and terminal-style posture.' },
+  { href: '/monitor', eyebrow: 'Operate', title: 'Monitor', copy: 'A live board with selection detail, pulse metrics, and event logs.' },
+  { href: '/rules', eyebrow: 'Anchor', title: 'Rules', copy: 'Saved alert rules that watch prices, spread, status, time-to-close, and positive-EV conditions.' },
 ];
 
 export default function HomePage() {
   return (
     <main className="page-shell">
-      <Shell title="PolyCore (v0.1)" subtitle="Analyze. Track. Monitor.">
+      <Shell title="PolyCore (v0.1)" subtitle="Analyze. Track. Monitor. Rule.">
         <header className="hero panel-surface">
           <div className="hero-copy-wrap">
             <p className="eyebrow">Overview</p>
@@ -49,13 +49,14 @@ export default function HomePage() {
               <Link className="primary-button" href="/calculator">Open calculator</Link>
               <Link className="secondary-button" href="/watchlist">Open watchlist</Link>
               <Link className="secondary-button" href="/monitor">Open monitor</Link>
+              <Link className="secondary-button" href="/rules">Open rules</Link>
             </div>
           </div>
           <div className="hero-rail">
             <div className="info-chip"><span>Calculator</span><strong>Edge, EV, Kelly, target entry, reverse pricing.</strong></div>
             <div className="info-chip"><span>Watchlist V2</span><strong>Saved local watchlists, import/export, filters, and calc handoff.</strong></div>
             <div className="info-chip"><span>Monitor V2</span><strong>Selection detail, pulse metrics, event logs, density, and live posture.</strong></div>
-            <div className="info-chip"><span>CLI</span><strong>Terminal watch and monitor commands in the same repo.</strong></div>
+            <div className="info-chip"><span>Rules</span><strong>Saved conditions for entry, spread, status, countdown, and positive EV.</strong></div>
           </div>
         </header>
 
