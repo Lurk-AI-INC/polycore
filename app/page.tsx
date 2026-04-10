@@ -29,7 +29,7 @@ export default function HomePage() {
           <div className="brand-lockup">
             <div className="brand-mark">PC</div>
             <div>
-              <p className="eyebrow">Open-source market toolkit by Lurk</p>
+              <p className="eyebrow">Open source market toolkit by Lurk</p>
               <div className="brand-line">
                 <strong>PolyCore (v0.1)</strong>
                 <span>Analyze. Track. Monitor.</span>

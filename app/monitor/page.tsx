@@ -171,7 +171,7 @@ export default function MonitorPage() {
           <div className="brand-lockup">
             <div className="brand-mark">P</div>
             <div>
-              <p className="eyebrow">Open-source market toolkit by Lurk</p>
+              <p className="eyebrow">Open source market toolkit by Lurk</p>
               <div className="brand-line">
                 <strong>PolyCore / Monitor</strong>
                 <span>Live board mode with watchlist DNA and terminal posture.</span>
