@@ -1,4 +1,4 @@
-# PolyCore
+# PolyCore (v0.4)
 
 PolyCore is the open-source, local-first utility layer for binary market workflows.
 
