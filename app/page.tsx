@@ -44,7 +44,7 @@ const modules = [
   { href: '/calculator', eyebrow: 'Analyze', title: 'Calculator', copy: 'YES / NO pricing with target entry, reverse pricing, fee presets, slippage, and sizing.' },
   { href: '/watchlist', eyebrow: 'Track', title: 'Watchlist', copy: 'Saved local watchlists, live Kalshi data, filter/sort, and one-click launch into the calculator.' },
   { href: '/monitor', eyebrow: 'Monitor', title: 'Monitor', copy: 'A live board for tracked markets with selection detail, pulse metrics, and event logs.' },
-  { href: '/rules', eyebrow: 'Automate', title: 'Rules', copy: 'Saved alert rules that watch price, spread, status, time-to-close, and positive-EV conditions.' },
+  { href: '/rules', eyebrow: 'Automate', title: 'Rules', copy: 'Saved alert rules that watch price, spread, status, time-to-close, and EV conditions.' },
 ];
 
 export default function HomePage() {
