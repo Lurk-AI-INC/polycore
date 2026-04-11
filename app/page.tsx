@@ -29,7 +29,7 @@ function Shell({ title, subtitle, children }: { title: string; subtitle: string;
           <div>
             <p className="eyebrow">PolyCore</p>
             <h2>Fast tooling for binary market workflows.</h2>
-            <p className="section-copy footer-copy">Calculator, watchlists, monitor, rules, and CLI for people who want useful market tools without the fluff.</p>
+            <p className="section-copy footer-copy">Calculator, watchlists, monitor, rules, and CLI.</p>
           </div>
           <div className="footer-links">
             {nav.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}
