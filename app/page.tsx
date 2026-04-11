@@ -54,7 +54,7 @@ export default function HomePage() {
         <header className="hero panel-surface">
           <div className="hero-copy-wrap">
             <p className="eyebrow">Overview</p>
-            <h1>Open-source tooling for binary markets.</h1>
+            <h1>Open-source market tools.</h1>
             <p className="hero-copy">Price contracts, track watchlists, monitor live markets, and run local rules from the browser or terminal.</p>
             <div className="hero-actions">
               <Link className="primary-button" href="/calculator">Open calculator</Link>
