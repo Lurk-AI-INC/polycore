@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+const VERSION = '0.7.0';
 const API_BASE = 'https://api.elections.kalshi.com/trade-api/v2';
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -32,23 +33,27 @@ function makeSample(ticker, title, status, yesBid, yesAsk, noBid, noAsk, last, h
 
 function usage() {
   process.stdout.write(`
-PolyCore CLI
+PolyCore CLI v${VERSION}
 
 Usage:
   polycore watch --file ./watchlists/default.json [--refresh 10] [--once] [--json] [--demo]
   polycore monitor --tickers T1,T2 [--refresh 8] [--json] [--sort close] [--status open]
-  polycore rules --file ./watchlists/rules.json [--refresh 10] [--once] [--json] [--demo]
+  polycore rules --file ./watchlists/rules.json [--watchlist ./watchlists/default.json] [--refresh 10] [--once] [--json] [--demo] [--fail-on-trigger]
 
 Flags:
-  --tickers   Comma-separated tickers
-  --file      Path to a watchlist or rules file
-  --refresh   Refresh interval in seconds (minimum 5)
-  --once      Run one cycle and exit
-  --json      Emit JSON output instead of a terminal table
-  --demo      Force sample fixture mode
-  --sort      close | spread | last | volume | ticker
-  --status    all | open | paused | closed | settled | unknown
-  --help      Show this help text
+  --tickers          Comma-separated tickers
+  --file             Path to a watchlist or rules file
+  --watchlist        Watchlist file supplying tickers for rules (else tickers come from the rules)
+  --refresh          Refresh interval in seconds (minimum 5)
+  --once             Run one cycle and exit
+  --json             Emit JSON output instead of a terminal table
+  --demo             Force sample fixture mode
+  --role             Fee role for EV math: taker (default) | maker
+  --fail-on-trigger  Exit with code 2 if any rule triggers (for cron / CI gates)
+  --sort             close | spread | last | volume | ticker
+  --status           all | open | paused | closed | settled | unknown
+  --version, -v      Show version
+  --help, -h         Show this help text
 `);
 }
 
@@ -57,10 +62,13 @@ function parseArgs(argv) {
     command: argv[2] ?? 'watch',
     tickers: '',
     file: '',
+    watchlist: '',
     refresh: 10,
     once: false,
     json: false,
     demo: false,
+    failOnTrigger: false,
+    role: 'taker',
     sort: 'close',
     status: 'all',
   };
@@ -75,6 +83,9 @@ function parseArgs(argv) {
     } else if (current === '--file') {
       args.file = next ?? '';
       i += 1;
+    } else if (current === '--watchlist') {
+      args.watchlist = next ?? '';
+      i += 1;
     } else if (current === '--refresh') {
       args.refresh = Math.max(5, Number(next) || 10);
       i += 1;
@@ -84,12 +95,20 @@ function parseArgs(argv) {
     } else if (current === '--status') {
       args.status = next ?? 'all';
       i += 1;
+    } else if (current === '--role') {
+      args.role = next === 'maker' ? 'maker' : 'taker';
+      i += 1;
     } else if (current === '--once') {
       args.once = true;
     } else if (current === '--json') {
       args.json = true;
     } else if (current === '--demo') {
       args.demo = true;
+    } else if (current === '--fail-on-trigger') {
+      args.failOnTrigger = true;
+    } else if (current === '--version' || current === '-v') {
+      process.stdout.write(`PolyCore CLI v${VERSION}\n`);
+      process.exit(0);
     } else if (current === '--help' || current === '-h') {
       usage();
       process.exit(0);
@@ -109,6 +128,12 @@ function parseTickers(value) {
     .split(/[\n,]/)
     .map((ticker) => ticker.trim().toUpperCase())
     .filter(Boolean))];
+}
+
+function parseTickersFromParsed(parsed) {
+  if (Array.isArray(parsed)) return parseTickers(parsed.join(','));
+  if (parsed && Array.isArray(parsed.tickers)) return parseTickers(parsed.tickers.join(','));
+  throw new Error('Watchlist file must be a JSON array or an object with a tickers array.');
 }
 
 function readTickers(args) {
@@ -180,12 +205,38 @@ function fmtTitle(value) {
   return String(value ?? '--').length > 34 ? `${String(value).slice(0, 31)}...` : String(value ?? '--');
 }
 
-function feeForPriceCents(price, feeMode, customFeeCents) {
-  const p = price / 100;
+// Fee coefficients verified against 2026 venue schedules. Kalshi taker 0.07,
+// maker ~25%; Polymarket free on most markets (0.0625 fee-enabled subset).
+const FEE_COEFFICIENTS = { 'kalshi': 0.07, 'kalshi-maker': 0.0175, 'polymarket': 0, 'polymarket-fee': 0.0625, 'no-fee': 0 };
+
+// Per-contract fee in cents, UNROUNDED (the venue rounds the order total).
+function feeForPriceCents(price, feeMode, customFeeCents, role = 'taker') {
   if (feeMode === 'no-fee') return 0;
-  if (feeMode === 'custom') return Number(customFeeCents) || 0;
-  if (feeMode === 'polymarket') return 100 * (0.04 * p * (1 - p));
-  return Math.ceil(100 * (0.07 * p * (1 - p)));
+  if (feeMode === 'custom') return Math.max(0, Number(customFeeCents) || 0);
+  const key = feeMode === 'kalshi' && role === 'maker' ? 'kalshi-maker' : feeMode;
+  const coef = FEE_COEFFICIENTS[key] ?? 0.07;
+  const p = price / 100;
+  return coef * p * (1 - p) * 100;
+}
+
+// Total fee in cents billed on an order: Kalshi/fee-enabled ceil the aggregate.
+function orderFeeCents(price, contracts, feeMode, customFeeCents, role = 'taker') {
+  const n = Math.max(0, Math.floor(contracts));
+  if (n === 0 || feeMode === 'no-fee' || feeMode === 'polymarket') return feeMode === 'no-fee' || feeMode === 'polymarket' ? 0 : 0;
+  if (feeMode === 'custom') return Math.max(0, Number(customFeeCents) || 0) * n;
+  const key = feeMode === 'kalshi' && role === 'maker' ? 'kalshi-maker' : feeMode;
+  const coef = FEE_COEFFICIENTS[key] ?? 0.07;
+  const p = price / 100;
+  return Math.ceil(coef * p * (1 - p) * 100 * n - 1e-9);
+}
+
+// Order-book lock: YES+NO bought below the 100c payout (after fees) is guaranteed profit.
+function detectLock(yesAsk, noAsk, feeMode = 'no-fee', customFeeCents = 0) {
+  if (yesAsk === null || noAsk === null) return null;
+  const combined = yesAsk + noAsk;
+  const fees = feeForPriceCents(yesAsk, feeMode, customFeeCents) + feeForPriceCents(noAsk, feeMode, customFeeCents);
+  const profit = 100 - combined - fees;
+  return { combined, fees, overround: combined - 100, profit, exists: profit > 0 };
 }
 
 async function fetchMarkets(tickers, { demo = false } = {}) {
@@ -276,6 +327,16 @@ function render(markets, refresh, mode, args, source, warning) {
       pad(market.countdown, 10),
     ].join('  '));
   }
+  const locks = markets
+    .map((market) => ({ ticker: market.ticker, lock: detectLock(market.yesAsk, market.noAsk, 'no-fee', 0) }))
+    .filter((entry) => entry.lock && entry.lock.exists);
+  if (locks.length > 0) {
+    console.log('');
+    console.log('Locks (YES+NO < 100¢, pre-fee):');
+    for (const entry of locks) {
+      console.log(`  ${pad(entry.ticker, 22)} combined ${entry.lock.combined}¢  profit +${entry.lock.profit.toFixed(2)}¢/pair`);
+    }
+  }
 }
 
 function evaluateRule(rule, market, previousStatus) {
@@ -293,15 +354,14 @@ function evaluateRule(rule, market, previousStatus) {
   if (rule.type === 'yes-positive-ev') {
     if (market.yesAsk === null) return null;
     const fee = feeForPriceCents(market.yesAsk, rule.feeMode || 'kalshi', rule.customFeeCents || 0);
-    const fair = Number(rule.fairYes || 50);
-    const netEv = fair - market.yesAsk / 100 - fee / 100;
+    // All terms in cents: fair payout (fairPct), price (yesAsk), fee.
+    const netEv = Number(rule.fairYes || 50) - market.yesAsk - fee;
     return netEv > 0 ? `YES is positive EV at ${fmtCents(market.yesAsk)} (+${netEv.toFixed(2)}¢)` : null;
   }
   if (rule.type === 'no-positive-ev') {
     if (market.noAsk === null) return null;
     const fee = feeForPriceCents(market.noAsk, rule.feeMode || 'kalshi', rule.customFeeCents || 0);
-    const fair = 100 - Number(rule.fairYes || 50);
-    const netEv = fair - market.noAsk / 100 - fee / 100;
+    const netEv = (100 - Number(rule.fairYes || 50)) - market.noAsk - fee;
     return netEv > 0 ? `NO is positive EV at ${fmtCents(market.noAsk)} (+${netEv.toFixed(2)}¢)` : null;
   }
   return null;
@@ -332,7 +392,11 @@ async function run() {
 
   if (args.command === 'rules') {
     const rules = readRules(args);
-    const tickers = [...new Set(rules.filter((rule) => rule.isEnabled !== false).map((rule) => rule.ticker).filter(Boolean))];
+    const tickers = args.watchlist
+      ? parseTickersFromParsed(readJsonFile(args.watchlist))
+      : args.tickers
+        ? parseTickers(args.tickers)
+        : [...new Set(rules.filter((rule) => rule.isEnabled !== false).map((rule) => rule.ticker).filter(Boolean))];
     let previousStatuses = {};
     let armed = {};
 
@@ -377,14 +441,16 @@ async function run() {
           warning,
           events,
         });
-        return;
+        return events;
       }
 
       renderRules(events, args.refresh, source, warning);
+      return events;
     };
 
     if (args.once || args.json) {
-      await loop();
+      const events = await loop();
+      if (args.failOnTrigger && events.length > 0) process.exit(2);
       return;
     }
 
@@ -408,7 +474,10 @@ async function run() {
         rowCount: filteredMarkets.length,
         source,
         warning,
-        markets: filteredMarkets,
+        markets: filteredMarkets.map((market) => ({
+          ...market,
+          lock: detectLock(market.yesAsk, market.noAsk, 'no-fee', 0),
+        })),
       });
       return;
     }
