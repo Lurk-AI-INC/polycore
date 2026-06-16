@@ -1,6 +1,6 @@
 {
   "name": "polycore",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Open-source, local-first utility layer for binary market workflows.",
   "private": false,
   "license": "MIT",
@@ -13,6 +13,8 @@
     "docs",
     "examples",
     "lib",
+    "python",
+    "tests",
     "watchlists",
     "LICENSE",
     "README.md",
@@ -27,7 +29,10 @@
     "cli": "node ./cli/polycore.mjs",
     "cli:watch": "node ./cli/polycore.mjs watch",
     "cli:monitor": "node ./cli/polycore.mjs monitor",
-    "cli:rules": "node ./cli/polycore.mjs rules"
+    "cli:rules": "node ./cli/polycore.mjs rules",
+    "test": "npm run test:ts && npm run test:py",
+    "test:ts": "tsx --test tests/ts/*.test.ts",
+    "test:py": "python3 -m unittest discover -s tests/python -t . -p \"test_*.py\""
   },
   "keywords": [
     "binary-markets",
@@ -46,6 +51,7 @@
     "@types/node": "24.5.2",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "tsx": "4.19.2",
     "typescript": "5.9.3"
   }
 }
