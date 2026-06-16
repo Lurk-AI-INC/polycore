@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .analytics import summarize_timeline_dir
 from .diffing import diff_snapshots
 from .io_utils import append_market_timelines, dump_json, load_rules, load_snapshot, load_watchlist_tickers, write_markets_csv, write_snapshot_json
 from .market_data import fetch_markets
@@ -33,6 +34,12 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument('--json', action='store_true', help='Emit JSON to stdout.')
     scan.add_argument('--out', default='', help='Optional JSON report path.')
     scan.add_argument('--alerts-out', default='', help='Optional triggered-events JSON output path.')
+
+    analyze = subparsers.add_parser('analyze', help='Descriptive (backward-looking) stats over timeline files. Never forecasts.')
+    analyze.add_argument('--dir', default='data/timelines', help='Directory of per-ticker jsonl timeline files.')
+    analyze.add_argument('--tickers', default='', help='Comma-separated subset of tickers to summarize.')
+    analyze.add_argument('--json', action='store_true', help='Emit JSON to stdout.')
+    analyze.add_argument('--out', default='', help='Optional JSON report path.')
 
     diff = subparsers.add_parser('diff', help='Compare two snapshot JSON files.')
     diff.add_argument('--left', required=True, help='Earlier snapshot path.')
@@ -95,6 +102,33 @@ def _print_scan(payload: dict[str, Any]) -> None:
         print(f"[{status:<9}] {rule['ticker']:<20} {rule['name']:<28} {row['message'] or '-'}")
 
 
+def _fmt_opt(value: Any, suffix: str = '') -> str:
+    if value is None:
+        return '--'
+    if isinstance(value, float):
+        text = f'{value:.2f}'.rstrip('0').rstrip('.')
+        return f'{text}{suffix}'
+    return f'{value}{suffix}'
+
+
+def _print_analyze(payload: dict[str, Any]) -> None:
+    summaries = payload['timelines']
+    print(f"Analyzed {len(summaries)} timeline(s) | descriptive only, no forecasts")
+    print('')
+    for row in summaries:
+        move = row['realizedMoveCents']
+        move_text = '--' if move is None else (f'+{move:g}' if move >= 0 else f'{move:g}')
+        print(
+            f"{row['ticker']:<20} n={row['samples']:<4} "
+            f"last {_fmt_opt(row['lastPriceCents'], '¢'):>6}  "
+            f"range {_fmt_opt(row['minPriceCents'], '¢')}-{_fmt_opt(row['maxPriceCents'], '¢')}  "
+            f"move {move_text:>6}  twap {_fmt_opt(row['twapCents'], '¢'):>7}  "
+            f"spread~{_fmt_opt(row['meanSpreadCents'], '¢')}  vol {row['volumeTrend']}"
+        )
+        for warning in row.get('warnings', []):
+            print(f"    note: {warning}")
+
+
 def _print_diff(payload: dict[str, Any]) -> None:
     print(
         f"Diff {payload['leftCapturedAt']} -> {payload['rightCapturedAt']} | "
@@ -151,8 +185,24 @@ def main(argv: list[str] | None = None) -> int:
             _print_scan(payload)
         return 0
 
+    if args.command == 'analyze':
+        tickers = _parse_tickers_arg(args.tickers) if args.tickers.strip() else None
+        summaries = summarize_timeline_dir(args.dir, tickers=tickers)
+        payload = {
+            'descriptiveOnly': True,
+            'directory': args.dir,
+            'timelineCount': len(summaries),
+            'timelines': [item.to_dict() for item in summaries],
+        }
+        if args.out:
+            dump_json(args.out, payload)
+        if args.json:
+            _emit_json(payload)
+        else:
+            _print_analyze(payload)
+        return 0
+
     if args.command == 'diff':
-        left = load_snapshot(args.left)
         right = load_snapshot(args.right)
         payload = diff_snapshots(left, right)
         if args.out:
